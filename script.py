@@ -49,8 +49,8 @@ class FileTransferer:
         # time at which upload started.
         trasmission_start = time.time()
 
-        progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
-        with open(file_name, "rb") as file:
+        progress = tqdm.tqdm(range(file_size), f"Sending {file_path}", unit="B", unit_scale=True, unit_divisor=1024)
+        with open(file_path, "rb") as file:
             while True:
                 
                 bytes_read = file.read(packet_size)
