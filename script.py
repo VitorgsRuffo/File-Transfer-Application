@@ -61,7 +61,7 @@ class FileTransferer:
                 progress.update(len(bytes_read))
         
         transmission_time = time.time() - trasmission_start
-    
+        time.sleep(1)
         print("File sent successfully.")
         up_speed = (file_size * 8) / transmission_time
         report = self.client_socket.recv(1024).decode('utf-8')
