@@ -63,7 +63,7 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
     
         print("File sent successfully.")
-        up_speed = (file_size * 8) / int(transmission_time)
+        up_speed = (file_size * 8) / transmission_time
         report = self.client_socket.recv(1024).decode('utf-8')
         report_footer = f"Upload speed: {up_speed} bps.\n--------------------\n"
         print(report)
@@ -120,7 +120,7 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
 
         print("File received successfully.")
-        dw_speed = (file_size * 8) / int(transmission_time)
+        dw_speed = (file_size * 8) / transmission_time
         report = "File transfer report\n--------------------\n" + \
                  f"File size: {file_size} bytes;\nPackets: {packets_received};"
         report_footer = f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
