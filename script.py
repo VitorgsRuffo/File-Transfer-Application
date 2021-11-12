@@ -58,7 +58,6 @@ class FileTransferer:
                     break
                 
                 self.client_socket.sendall(bytes_read)
-                print("sendal")
                 progress.update(len(bytes_read))
         
         transmission_time = time.time() - trasmission_start
@@ -119,7 +118,6 @@ class FileTransferer:
             while True:
 
                 bytes_read = connection.recv(packet_size)
-                print("recv")
                 if not bytes_read:    
                     break
                 packets_received+=1
