@@ -64,11 +64,13 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
         time.sleep(1)
         print("File sent successfully.")
-        up_speed = (file_size * 8) / transmission_time
-        report = self.client_socket.recv(1024).decode('utf-8')
-        report_footer = f"Upload speed: {up_speed} bps.\n--------------------\n"
-        print(report)
-        print(report_footer)
+        
+        #up_speed = (file_size * 8) / transmission_time
+        #report = self.client_socket.recv(1024).decode('utf-8')
+        #report_footer = f"Upload speed: {up_speed} bps.\n--------------------\n"
+        #print(report)
+        #print(report_footer)
+
         self.client_socket.close()
         self.client_socket = None
     
@@ -103,6 +105,11 @@ class FileTransferer:
         packet_size = int(packet_size)
         packets_received = 0
 
+        #print(file_name)
+        #print(file_size)
+        #print(packet_size)
+        #input()
+
         # time at which dowload started.
         trasmission_start = time.time()
 
@@ -122,14 +129,15 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
 
         print("File received successfully.")
-        dw_speed = (file_size * 8) / transmission_time
-        report = "File transfer report\n--------------------\n" + \
-                 f"File size: {file_size} bytes;\nPackets: {packets_received};"
-        report_footer = f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
-        print(report)
-        print(report_footer)
+        
+        #dw_speed = (file_size * 8) / transmission_time
+        #report = "File transfer report\n--------------------\n" + \
+        #         f"File size: {file_size} bytes;\nPackets: {packets_received};"
+        #report_footer = f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
+        #print(report)
+        #print(report_footer)
 
-        connection.send(report.encode('utf-8'))
+        #connection.send(report.encode('utf-8'))
         connection.close()
 
 
