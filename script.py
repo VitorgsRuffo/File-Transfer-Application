@@ -31,7 +31,7 @@ class FileTransferer:
 
         packet_size = int(input("Enter the packet size (100, 500, 1000 or 1500): "))
 
-        self.client_socket = socket.socket()
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print(f"Establishing connection with {ip}:{port}...\n")
         
         self.client_socket.connect((ip, port))
