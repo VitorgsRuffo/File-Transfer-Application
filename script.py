@@ -51,7 +51,8 @@ class FileTransferer:
         # time at which upload started.
         trasmission_start = time.time()
         
-        print("Sending file...")
+        progress = tqdm.tqdm(range(file_size), f"Sending {file_path}", unit="B", unit_scale=True, unit_divisor=packet_size)
+
         packets_sent = 0
 
         with open(file_path, "rb") as file:
@@ -61,9 +62,10 @@ class FileTransferer:
                 if not bytes_read:
                     break
                 
-                bytes_sent = self.client_socket.send(bytes_read)
+                self.client_socket.sendall(bytes_read)
                 msg = self.client_socket.recv(1024).decode()
                 packets_sent+=1
+                progress.update(bytes_read)
 
         
         transmission_time = time.time() - trasmission_start
@@ -114,7 +116,7 @@ class FileTransferer:
         # time at which dowload started.
         trasmission_start = time.time()
 
-        print("Receiving file...")
+        progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=packet_size)
 
         with open(file_name, "wb") as file:
             while True:
@@ -125,6 +127,7 @@ class FileTransferer:
                 packets_received+=1
                 file.write(bytes_read)
                 connection.send("Packet received successfully.".encode())
+                progress.update(bytes_read)
 
         transmission_time = time.time() - trasmission_start
 
