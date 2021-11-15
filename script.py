@@ -65,7 +65,7 @@ class FileTransferer:
                 self.client_socket.sendall(bytes_read)
                 msg = self.client_socket.recv(1024).decode()
                 packets_sent+=1
-                progress.update(bytes_read)
+                progress.update(len(bytes_read))
 
         
         transmission_time = time.time() - trasmission_start
@@ -127,7 +127,7 @@ class FileTransferer:
                 packets_received+=1
                 file.write(bytes_read)
                 connection.send("Packet received successfully.".encode())
-                progress.update(bytes_read)
+                progress.update(len(bytes_read))
 
         transmission_time = time.time() - trasmission_start
 
