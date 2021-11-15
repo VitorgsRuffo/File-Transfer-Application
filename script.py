@@ -28,12 +28,11 @@ class FileTransferer:
 
         file_path = input("Enter the file path:")
         file_size = os.path.getsize(file_path)
-
         packet_size = int(input("Enter the packet size (100, 500, 1000 or 1500): "))
 
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         print(f"Establishing connection with {ip}:{port}...\n")
-        
         self.client_socket.connect((ip, port))
 
         message = self.client_socket.recv(1024).decode('utf-8')
@@ -51,6 +50,7 @@ class FileTransferer:
         trasmission_start = time.time()
         
         print("Sending file...")
+        packets_sent = 0
 
         with open(file_path, "rb") as file:
             while True:
@@ -59,18 +59,20 @@ class FileTransferer:
                 if not bytes_read:
                     break
                 
-                self.client_socket.sendall(bytes_read)
+                bytes_sent = self.client_socket.send(bytes_read)
+                print(f"bytes sent: {bytes_sent}")
+                packets_sent+=1
 
         
         transmission_time = time.time() - trasmission_start
         time.sleep(1)
         print("File sent successfully.")
         
-        #up_speed = (file_size * 8) / transmission_time
-        #report = self.client_socket.recv(1024).decode('utf-8')
-        #report_footer = f"Upload speed: {up_speed} bps.\n--------------------\n"
-        #print(report)
-        #print(report_footer)
+        up_speed = (file_size * 8) / transmission_time
+        report = "File transfer report\n--------------------\n" + \
+                 f"File size: {file_size} bytes;\nPackets: {packets_sent};" + \
+                 f"\nUpload speed: {up_speed} bps.\n--------------------\n"
+        print(report)
 
         self.client_socket.close()
         self.client_socket = None
@@ -124,14 +126,12 @@ class FileTransferer:
 
         print("File received successfully.")
         
-        #dw_speed = (file_size * 8) / transmission_time
-        #report = "File transfer report\n--------------------\n" + \
-        #         f"File size: {file_size} bytes;\nPackets: {packets_received};"
-        #report_footer = f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
-        #print(report)
-        #print(report_footer)
+        dw_speed = (file_size * 8) / transmission_time
+        report = "File transfer report\n--------------------\n" + \
+                 f"File size: {file_size} bytes;\nPackets: {packets_received};" + \
+                 f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
+        print(report)
 
-        #connection.send(report.encode('utf-8'))
         connection.close()
 
 
