@@ -8,7 +8,6 @@ separator = "<SEP>"
 class FileTransferer:
     def __init__(self, ip: str, port: int):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind((ip, port))
         self.server_socket.listen(100)
         self.client_socket = None
@@ -69,7 +68,6 @@ class FileTransferer:
 
         
         transmission_time = time.time() - trasmission_start
-        time.sleep(3)
         print("File sent successfully.")
         
         up_speed = (file_size * 8) / transmission_time
@@ -130,7 +128,6 @@ class FileTransferer:
                 progress.update(len(bytes_read))
 
         transmission_time = time.time() - trasmission_start
-        time.sleep(3)
         print("File received successfully.")
         
         dw_speed = (file_size * 8) / transmission_time
