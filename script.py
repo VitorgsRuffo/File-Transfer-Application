@@ -8,7 +8,7 @@ separator = "<SEP>"
 class FileTransferer:
     def __init__(self, ip: str, port: int):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        #self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind((ip, port))
         self.server_socket.listen(100)
         self.client_socket = None
@@ -45,6 +45,8 @@ class FileTransferer:
 
         # Sending meta-data
         self.client_socket.send(f"{file_path}{separator}{file_size}{separator}{packet_size}".encode())
+        msg = self.client_socket.recv(1024).decode()
+
 
         # time at which upload started.
         trasmission_start = time.time()
@@ -60,7 +62,7 @@ class FileTransferer:
                     break
                 
                 bytes_sent = self.client_socket.send(bytes_read)
-                print(f"bytes sent: {bytes_sent}")
+                msg = self.client_socket.recv(1024).decode()
                 packets_sent+=1
 
         
@@ -107,6 +109,7 @@ class FileTransferer:
         file_size = int(file_size)
         packet_size = int(packet_size)
         packets_received = 0
+        connection.send("Metadata received successfully.".encode())
 
         # time at which dowload started.
         trasmission_start = time.time()
@@ -121,6 +124,7 @@ class FileTransferer:
                     break
                 packets_received+=1
                 file.write(bytes_read)
+                connection.send("Packet received successfully.".encode())
 
         transmission_time = time.time() - trasmission_start
 
