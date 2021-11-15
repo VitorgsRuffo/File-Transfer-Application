@@ -70,7 +70,7 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
         print("File sent successfully.")
         
-        up_speed = (file_size * 8) / transmission_time
+        up_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
                  f"File size: {file_size} bytes;\nPackets: {packets_sent};" + \
                  f"\nUpload speed: {up_speed} bps.\n--------------------\n"
@@ -130,7 +130,7 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
         
-        dw_speed = (file_size * 8) / transmission_time
+        dw_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
                  f"File size: {file_size} bytes;\nPackets: {packets_received};" + \
                  f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
