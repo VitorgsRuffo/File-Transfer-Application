@@ -47,28 +47,34 @@ class FileTransferer:
         msg = self.client_socket.recv(1024).decode()
 
 
-        # time at which upload started.
-        trasmission_start = time.time()
-        
-        progress = tqdm.tqdm(range(file_size), f"Sending {file_path}", unit="B", unit_scale=True, unit_divisor=packet_size)
+        with open(file_path, "rb") as file:
+            buffer = file.read()
+        buffer_len = len(buffer)
 
         packets_sent = 0
+        start = 0
+        end = packet_size
 
-        with open(file_path, "rb") as file:
-            while True:
-                
-                bytes_read = file.read(packet_size)
-                if not bytes_read:
-                    break
-                
-                self.client_socket.sendall(bytes_read)
-                msg = self.client_socket.recv(1024).decode()
-                packets_sent+=1
-                progress.update(len(bytes_read))
-
+        progress = tqdm.tqdm(range(file_size), f"Sending {file_path}", unit="B", unit_scale=True, unit_divisor=packet_size)
+        trasmission_start = time.time() # time at which upload started.
+        while True:
+            bytes_read = buffer[start:end]
+            if not bytes_read:
+                break
+            
+            self.client_socket.sendall(bytes_read)
+            msg = self.client_socket.recv(1024).decode()
+            packets_sent+=1
+            progress.update(len(bytes_read))
+            start = end
+            end += packet_size
         
         transmission_time = time.time() - trasmission_start
         print("File sent successfully.")
+
+        self.client_socket.shutdown(socket.SHUT_RDWR)
+        self.client_socket.close()
+        self.client_socket = None
         
         up_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
@@ -76,8 +82,7 @@ class FileTransferer:
                  f"\nUpload speed: {up_speed} bps.\n--------------------\n"
         print(report)
 
-        self.client_socket.close()
-        self.client_socket = None
+        
     
 
     def receive_file(self):
@@ -111,32 +116,34 @@ class FileTransferer:
         packets_received = 0
         connection.send("Metadata received successfully.".encode())
 
-        # time at which dowload started.
-        trasmission_start = time.time()
+        buffer = b""
 
         progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=packet_size)
+        trasmission_start = time.time() # time at which dowload started.
+        while True:
 
-        with open(file_name, "wb") as file:
-            while True:
+            bytes_read = connection.recv(packet_size)
+            if not bytes_read:    
+                break
+            packets_received+=1
+            buffer += bytes_read
 
-                bytes_read = connection.recv(packet_size)
-                if not bytes_read:    
-                    break
-                packets_received+=1
-                file.write(bytes_read)
-                connection.send("Packet received successfully.".encode())
-                progress.update(len(bytes_read))
+            connection.send("Packet received successfully.".encode())
+            progress.update(len(bytes_read))
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
+
+        connection.close()
+
+        with open(file_name, "wb") as file:
+            file.write(buffer)
         
         dw_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
                  f"File size: {file_size} bytes;\nPackets: {packets_received};" + \
                  f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
         print(report)
-
-        connection.close()
 
 
     def run(self):
