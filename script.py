@@ -62,7 +62,7 @@ class FileTransferer:
             if not bytes_read:
                 break
             
-            self.client_socket.sendall(bytes_read)
+            self.client_socket.send(bytes_read)
             msg = self.client_socket.recv(1024).decode()
             packets_sent+=1
             progress.update(len(bytes_read))
