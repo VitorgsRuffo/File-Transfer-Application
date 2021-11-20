@@ -46,7 +46,6 @@ class FileTransferer:
         self.client_socket.send(f"{file_path}{separator}{file_size}{separator}{packet_size}".encode())
         msg = self.client_socket.recv(1024).decode()
 
-
         with open(file_path, "rb") as file:
             buffer = file.read()
         buffer_len = len(buffer)
@@ -56,18 +55,19 @@ class FileTransferer:
         end = packet_size
 
         progress = tqdm.tqdm(range(file_size), f"Sending {file_path}", unit="B", unit_scale=True, unit_divisor=packet_size)
+        
+        bytes_read = buffer[start:end]
+
         trasmission_start = time.time() # time at which upload started.
-        while True:
-            bytes_read = buffer[start:end]
-            if not bytes_read:
-                break
-            
+        while bytes_read:
             self.client_socket.send(bytes_read)
-            msg = self.client_socket.recv(1024).decode()
+            #msg = self.client_socket.recv(1024).decode()
             packets_sent+=1
             progress.update(len(bytes_read))
             start = end
             end += packet_size
+            bytes_read = buffer[start:end]
+
         
         transmission_time = time.time() - trasmission_start
         print("File sent successfully.")
@@ -119,17 +119,16 @@ class FileTransferer:
         buffer = b""
 
         progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=packet_size)
+        
         trasmission_start = time.time() # time at which dowload started.
-        while True:
-
-            bytes_read = connection.recv(packet_size)
-            if not bytes_read:    
-                break
+        bytes_read = connection.recv(packet_size)
+        while bytes_read:
             packets_received+=1
             buffer += bytes_read
-
-            connection.send("Packet received successfully.".encode())
+            #connection.send("Packet received successfully.".encode())
             progress.update(len(bytes_read))
+            bytes_read = connection.recv(packet_size)
+
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
