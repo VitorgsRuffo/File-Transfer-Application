@@ -61,7 +61,7 @@ class FileTransferer:
         trasmission_start = time.time() # time at which upload started.
         while bytes_read:
             self.client_socket.send(bytes_read)
-            #msg = self.client_socket.recv(1024).decode()
+            msg = self.client_socket.recv(1024).decode()
             packets_sent+=1
             progress.update(len(bytes_read))
             start = end
@@ -125,7 +125,7 @@ class FileTransferer:
         while bytes_read:
             packets_received+=1
             buffer += bytes_read
-            #connection.send("Packet received successfully.".encode())
+            connection.send("Packet received successfully.".encode())
             progress.update(len(bytes_read))
             bytes_read = connection.recv(packet_size)
 
