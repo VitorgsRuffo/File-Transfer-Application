@@ -69,6 +69,10 @@ class FileTransferer:
         self.client_socket.shutdown(socket.SHUT_RDWR)
         self.client_socket.close()
         self.client_socket = None
+
+        # Tratamento de envio muito rápido de arquivo
+        if transmission_time == 0:
+            transmission_time = 1
         
         up_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
@@ -126,6 +130,10 @@ class FileTransferer:
 
         with open(file_name, "wb") as file:
             file.write(buffer)
+
+        # Tratamento de envio muito rápido de arquivo
+        if transmission_time == 0:
+            transmission_time = 1
         
         dw_speed = round((file_size * 8) / transmission_time, 2)
         report = "File transfer report\n--------------------\n" + \
