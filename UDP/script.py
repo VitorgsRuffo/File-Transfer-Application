@@ -7,9 +7,8 @@ separator = "<SEP>"
 
 class FileTransferer:
     def __init__(self, ip: str, port: int):
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.server_socket.bind((ip, port))
-        self.server_socket.listen(100)
         self.client_socket = None
 
     def __menu(self):
@@ -29,22 +28,15 @@ class FileTransferer:
         file_size = os.path.getsize(file_path)
         packet_size = int(input("Enter the packet size (500, 1000 or 1500): "))
 
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        print(f"Establishing connection with {ip}:{port}...\n")
-        self.client_socket.connect((ip, port))
-
-        message = self.client_socket.recv(1024).decode('utf-8')
-        if message:
-            print(message)
-        else:
-            self.client_socket.close()
-            print("Failed to connect.\nExiting...\n")
-            return
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         # Sending meta-data
-        self.client_socket.send(f"{file_path}{separator}{file_size}{separator}{packet_size}".encode())
-        msg = self.client_socket.recv(1024).decode()
+        self.client_socket.sendto(
+            f"{file_path}{separator}{file_size}{separator}{packet_size}".encode(), 
+            (ip, port))
+
+        # receiving confirmation message...
+        self.server_socket.recvfrom(1024)
 
         with open(file_path, "rb") as file:
             buffer = file.read()
@@ -57,7 +49,7 @@ class FileTransferer:
         print("Sending...")
         trasmission_start = time.time() # time at which upload started.
         while bytes_read:
-            self.client_socket.send(bytes_read)
+            self.client_socket.sendto(bytes_read, (ip, port))
             packets_sent+=1
             start = end
             end += packet_size
@@ -66,7 +58,6 @@ class FileTransferer:
         transmission_time = time.time() - trasmission_start
         print("File sent successfully.")
 
-        self.client_socket.shutdown(socket.SHUT_RDWR)
         self.client_socket.close()
         self.client_socket = None
 
@@ -75,7 +66,7 @@ class FileTransferer:
             transmission_time = 1
         
         up_speed = round((file_size * 8) / transmission_time, 2)
-        report = "File transfer report\n--------------------\n" + \
+        report = "\nFile transfer report\n--------------------\n" + \
                  f"File size: {file_size} bytes;\nPackets: {packets_sent};" + \
                  f"\nUpload speed: {up_speed} bps.\n--------------------\n"
         print(report)
@@ -86,47 +77,29 @@ class FileTransferer:
     def receive_file(self):
 
         print("Waiting for a connection...")
-        while True:
-            connection, addr = self.server_socket.accept()
-
-            print("{}:{} wants to connect.".format(addr[0], addr[1]))
-            print("Do you accept ? (y/n)")
-            allow = input()
-
-            if (allow == "n") | (allow == "N"):
-                connection.shutdown(socket.SHUT_RD)
-                connection.close()
-            else:
-                break
-
-        print("{}:{} just to connected!".format(addr[0], addr[1]))
-
-        ip = self.server_socket.getsockname()[0]
-        connection.send(str("You connected to {}.\n".format(ip)).encode('utf-8'))
 
         # receiving file to be received meta-data...
-        meta_data = connection.recv(1024).decode()
+        meta_data, address = self.server_socket.recvfrom(1024)
+        meta_data = meta_data.decode()
         file_path, file_size, packet_size = meta_data.split(separator)
         file_name = os.path.basename(file_path) #removing file path
         file_size = int(file_size)
         packet_size = int(packet_size)
         packets_received = 0
-        connection.send("Metadata received successfully.".encode())
+        self.server_socket.sendto("Ok".encode(), address)
 
         buffer = b""
         
         print("Receiving...")
         trasmission_start = time.time() # time at which dowload started.
-        bytes_read = connection.recv(packet_size)
+        bytes_read, _ = self.server_socket.recvfrom(packet_size)
         while bytes_read:
             packets_received+=1
             buffer += bytes_read
-            bytes_read = connection.recv(packet_size)
+            bytes_read, _ = self.server_socket.recv(packet_size)
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
-
-        connection.close()
 
         with open(file_name, "wb") as file:
             file.write(buffer)
