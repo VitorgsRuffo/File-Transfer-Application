@@ -36,7 +36,7 @@ class FileTransferer:
             (ip, port))
 
         # receiving confirmation message...
-        self.server_socket.recvfrom(1024)
+        self.client_socket.recvfrom(1024)
 
         with open(file_path, "rb") as file:
             buffer = file.read()
@@ -96,7 +96,7 @@ class FileTransferer:
         while bytes_read:
             packets_received+=1
             buffer += bytes_read
-            bytes_read, _ = self.server_socket.recv(packet_size)
+            bytes_read, _ = self.server_socket.recvfrom(packet_size)
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
