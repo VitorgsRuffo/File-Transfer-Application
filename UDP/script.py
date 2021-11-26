@@ -1,5 +1,4 @@
 import socket
-import tqdm
 import os
 import time
 
@@ -93,10 +92,16 @@ class FileTransferer:
         print("Receiving...")
         trasmission_start = time.time() # time at which dowload started.
         bytes_read, _ = self.server_socket.recvfrom(packet_size)
-        while bytes_read:
+
+        self.server_socket.settimeout(0.2)
+
+        while (packet_size*packets_received) < file_size:
             packets_received+=1
             buffer += bytes_read
-            bytes_read, _ = self.server_socket.recvfrom(packet_size)
+            try:
+                bytes_read, _ = self.server_socket.recvfrom(packet_size)
+            except:
+                pass
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
