@@ -74,7 +74,7 @@ class FileTransferer:
     
 
     def receive_file(self):
-
+    
         print("Waiting for a connection...")
 
         # receiving file to be received meta-data...
@@ -89,19 +89,29 @@ class FileTransferer:
 
         buffer = b""
         
-        print("Receiving...")
-        trasmission_start = time.time() # time at which dowload started.
-        bytes_read, _ = self.server_socket.recvfrom(packet_size)
-
         self.server_socket.settimeout(0.2)
 
-        while (packet_size*packets_received) < file_size:
+        print("Receiving...")        
+        trasmission_start = time.time() # time at which dowload started.
+        
+        bytes_read = b""
+        while True:
+            try:
+                bytes_read, _ = self.server_socket.recvfrom(packet_size)
+                break
+            except:
+                pass
+
+        loop_iterations = 0
+        while (packet_size*loop_iterations) < file_size:
             packets_received+=1
             buffer += bytes_read
             try:
                 bytes_read, _ = self.server_socket.recvfrom(packet_size)
+                print(len(bytes_read))
             except:
                 pass
+            loop_iterations+=1
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
@@ -118,6 +128,8 @@ class FileTransferer:
                  f"File size: {file_size} bytes;\nPackets: {packets_received};" + \
                  f"\nDownload speed: {dw_speed} bps.\n--------------------\n"
         print(report)
+            
+        self.server_socket.settimeout(None)
 
 
     def run(self):
