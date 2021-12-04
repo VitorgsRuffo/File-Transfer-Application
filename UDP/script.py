@@ -18,6 +18,35 @@ class FileTransferer:
         print("3 - Exit.")
         print("---------------------------")
 
+    def secure_sendto(self, bytes, bytesAmount, address):
+        while True:
+            self.client_socket.sendto(bytes, address)
+            try:
+                msg, _ = self.client_socket.recvfrom(1024)
+            except:
+                continue 
+            msg = msg.decode()
+            #print("certo")
+            if msg == "ok":
+                break
+
+    def secure_recvfrom(self, bytesAmount, packets_received, expected_packets):
+        while True:
+            #if packets_received > 90:
+            #    input()
+            try:
+                bytes_read, _ = self.server_socket.recvfrom(bytesAmount)
+            except:
+                continue            
+            if (len(bytes_read) < bytesAmount) & ((packets_received+1) < expected_packets):
+                #print("notok")
+                self.server_socket.sendto("notok".encode(), _)
+            else:
+                #print("ok")
+                self.server_socket.sendto("ok".encode(), _)
+                break
+        return bytes_read
+    
     def send_file(self):
 
         ip = input("Enter the IP you want to send a file to:")
@@ -40,6 +69,8 @@ class FileTransferer:
         with open(file_path, "rb") as file:
             buffer = file.read()
 
+        self.client_socket.settimeout(0.2)
+
         packets_sent = 0
         start = 0
         end = packet_size
@@ -48,8 +79,9 @@ class FileTransferer:
         print("Sending...")
         trasmission_start = time.time() # time at which upload started.
         while bytes_read:
-            self.client_socket.sendto(bytes_read, (ip, port))
+            self.secure_sendto(bytes_read, packet_size, (ip, port))
             packets_sent+=1
+            #print(packets_sent)
             start = end
             end += packet_size
             bytes_read = buffer[start:end]
@@ -78,13 +110,21 @@ class FileTransferer:
         print("Waiting for a connection...")
 
         # receiving file to be received meta-data...
-        meta_data, address = self.server_socket.recvfrom(1024)
-        meta_data = meta_data.decode()
+        while True:
+            try:
+                meta_data, address = self.server_socket.recvfrom(1024)
+                meta_data = meta_data.decode()
+                break
+            except:
+                pass
         file_path, file_size, packet_size = meta_data.split(separator)
         file_name = os.path.basename(file_path) #removing file path
         file_size = int(file_size)
         packet_size = int(packet_size)
         packets_received = 0
+        expected_packets = file_size // packet_size
+        if file_size % packet_size > 0:
+            expected_packets+=1
         self.server_socket.sendto("Ok".encode(), address)
 
         buffer = b""
@@ -95,23 +135,25 @@ class FileTransferer:
         trasmission_start = time.time() # time at which dowload started.
         
         bytes_read = b""
-        while True:
-            try:
-                bytes_read, _ = self.server_socket.recvfrom(packet_size)
-                break
-            except:
-                pass
-
-        loop_iterations = 0
-        while (packet_size*loop_iterations) < file_size:
+        
+        #self.secure_recvfrom(packet_size, packets_received, expected_packets)
+        #while (packet_size*packets_received) < file_size:
+        #    packets_received+=1
+        #    print(packets_received)
+        #    buffer += bytes_read
+        #    if (packet_size*packets_received) < file_size:
+        #        self.secure_recvfrom(packet_size, packets_received, expected_packets)
+        
+        #print(expected_packets)
+        while (packet_size*packets_received) < file_size:
+            bytes_read = self.secure_recvfrom(packet_size, packets_received, expected_packets)
             packets_received+=1
+            #print(packets_received)
+            #print(f"1:{packet_size*packets_received} 2:{file_size}")
+            #time.sleep(0.000999) 1000
+            #time.sleep(0.01) 1500
             buffer += bytes_read
-            try:
-                bytes_read, _ = self.server_socket.recvfrom(packet_size)
-                print(len(bytes_read))
-            except:
-                pass
-            loop_iterations+=1
+            
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
