@@ -26,23 +26,18 @@ class FileTransferer:
             except:
                 continue 
             msg = msg.decode()
-            #print("certo")
             if msg == "ok":
                 break
 
     def secure_recvfrom(self, bytesAmount, packets_received, expected_packets):
         while True:
-            #if packets_received > 90:
-            #    input()
             try:
                 bytes_read, _ = self.server_socket.recvfrom(bytesAmount)
             except:
                 continue            
             if (len(bytes_read) < bytesAmount) & ((packets_received+1) < expected_packets):
-                #print("notok")
                 self.server_socket.sendto("notok".encode(), _)
             else:
-                #print("ok")
                 self.server_socket.sendto("ok".encode(), _)
                 break
         return bytes_read
@@ -81,7 +76,6 @@ class FileTransferer:
         while bytes_read:
             self.secure_sendto(bytes_read, packet_size, (ip, port))
             packets_sent+=1
-            #print(packets_sent)
             start = end
             end += packet_size
             bytes_read = buffer[start:end]
@@ -103,8 +97,6 @@ class FileTransferer:
         print(report)
 
         
-    
-
     def receive_file(self):
     
         print("Waiting for a connection...")
@@ -136,24 +128,10 @@ class FileTransferer:
         
         bytes_read = b""
         
-        #self.secure_recvfrom(packet_size, packets_received, expected_packets)
-        #while (packet_size*packets_received) < file_size:
-        #    packets_received+=1
-        #    print(packets_received)
-        #    buffer += bytes_read
-        #    if (packet_size*packets_received) < file_size:
-        #        self.secure_recvfrom(packet_size, packets_received, expected_packets)
-        
-        #print(expected_packets)
         while (packet_size*packets_received) < file_size:
             bytes_read = self.secure_recvfrom(packet_size, packets_received, expected_packets)
             packets_received+=1
-            #print(packets_received)
-            #print(f"1:{packet_size*packets_received} 2:{file_size}")
-            #time.sleep(0.000999) 1000
-            #time.sleep(0.01) 1500
             buffer += bytes_read
-            
 
         transmission_time = time.time() - trasmission_start
         print("File received successfully.")
